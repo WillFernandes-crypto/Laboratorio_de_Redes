@@ -1,30 +1,38 @@
 import socket
 
-# Configurações do cliente DNS
-host = "192.168.4.13"
-port = 1234
+def cliente_dns():
+    # Cria um socket UDP
+    cliente_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-# Criação do socket do cliente
-sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    # Endereço e porta do servidor DNS
+    servidor_endereco = 'localhost'
+    servidor_porta = 53
 
-while True:
-    # Solicita ao usuário o nome do destinatário
-    nome_destinatario = input("Digite o nome do destinatário: ").lower()
+    # Solicita o nome do servidor ao usuário
+    servidor_nome = input("Digite o nome do servidor: ")
 
-    # Envia o nome do destinatário ao servidor DNS
-    sock.sendto(nome_destinatario.encode(), (host, port))
+    # Envia o nome do servidor para o servidor DNS
+    cliente_socket.sendto(servidor_nome.encode(), (servidor_endereco, servidor_porta))
 
-    # Recebe a resposta do servidor DNS
-    endereco_ip, endereco_dns = sock.recvfrom(1024)
-    endereco_ip = endereco_ip.decode()
+    # Aguarda a resposta do servidor DNS
+    resposta, _ = cliente_socket.recvfrom(1024)
+    resposta_decodificada = resposta.decode()
 
-    # Verifica se o endereço IP foi encontrado ou não
-    if endereco_ip != "Nome não encontrado na tabela DNS":
-        print(f"Endereço IP do destinatário: {endereco_ip}")
+    # Exibe a resposta do servidor DNS
+    print(resposta_decodificada)
 
-        # Envia mensagens para o destinatário usando o endereço IP
-        destinatario_porta = 60500  # Porta do destinatário (exemplo: 60500)
-        mensagem = input("Digite a mensagem para enviar: ")
-        sock.sendto(mensagem.encode(), (endereco_ip, destinatario_porta))
-    else:
-        print("Nome não encontrado na tabela DNS")
+    # Verifica se o servidor foi encontrado
+    if resposta_decodificada.startswith("Servidor encontrado"):
+        mensagem_dns = input("Digite a mensagem a ser enviada ao servidor DNS: ")
+
+        # Envia a mensagem para o servidor DNS
+        cliente_socket.sendto(mensagem_dns.encode(), (servidor_endereco, servidor_porta))
+
+        # Aguarda a resposta do servidor DNS
+        resposta_servidor, _ = cliente_socket.recvfrom(1024)
+        print(resposta_servidor.decode())
+
+    cliente_socket.close()
+
+if __name__ == '__main__':
+    cliente_dns()
